@@ -718,3 +718,167 @@ footer {
     transition: none !important;
   }
 }
+
+/* Темата променя само цветовете. Структурата на екрана остава обща. */
+.header-actions {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+.theme-toggle {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  border: 1px solid #ccd6c5;
+  border-radius: 20px;
+  padding: 8px 12px;
+  background: #fff;
+  color: #304f42;
+  font-size: 11px;
+  white-space: nowrap;
+}
+:root[data-theme="dark"] {
+  color-scheme: dark;
+  background: #101a17;
+  color: #e2ebe1;
+}
+[data-theme="dark"] .sidebar {
+  background: #122d26;
+}
+[data-theme="dark"] .topbar {
+  border-color: #2b3a30;
+  color: #a6b7a3;
+}
+[data-theme="dark"] .topbar strong {
+  color: #dbe6d5;
+}
+[data-theme="dark"] .avatar {
+  background: #2a4032;
+  border-color: #3a5140;
+  color: #dcebb9;
+}
+[data-theme="dark"] .theme-toggle {
+  background: #203027;
+  border-color: #40523c;
+  color: #dcebb9;
+}
+[data-theme="dark"] .business-card {
+  background: #243327;
+}
+[data-theme="dark"] .badge {
+  border-color: #4c5f43;
+  color: #c6d5b6;
+}
+[data-theme="dark"] .business-card .large {
+  color: #bfcea3;
+}
+[data-theme="dark"] h1 em {
+  color: #c2d6a1;
+}
+[data-theme="dark"] .eyebrow {
+  color: #adbd96;
+}
+[data-theme="dark"] .intro p,
+[data-theme="dark"] .muted,
+[data-theme="dark"] label,
+[data-theme="dark"] .stats span,
+[data-theme="dark"] .stats small,
+[data-theme="dark"] .slot-toolbar,
+[data-theme="dark"] .booking-summary span,
+[data-theme="dark"] .booking-person span,
+[data-theme="dark"] .time-range span,
+[data-theme="dark"] .empty,
+[data-theme="dark"] footer {
+  color: #aebda5;
+}
+[data-theme="dark"] .stats,
+[data-theme="dark"] .panel {
+  background: #1a2821;
+  border-color: #344333;
+}
+[data-theme="dark"] .stats > div {
+  border-color: #344333;
+}
+[data-theme="dark"] input,
+[data-theme="dark"] select {
+  background: #131f19;
+  border-color: #45533f;
+  color: #e3ebdf;
+}
+[data-theme="dark"] input::placeholder {
+  color: #9fac96;
+}
+[data-theme="dark"] .slot {
+  background: #223127;
+  border-color: #46583e;
+  color: #e1ebd6;
+}
+[data-theme="dark"] .slot span {
+  color: #c2d3af;
+}
+[data-theme="dark"] .slot.selected {
+  background: #d4e7a8;
+  border-color: #d4e7a8;
+  color: #203322;
+}
+[data-theme="dark"] .slot.selected span {
+  color: #364b2c;
+}
+[data-theme="dark"] .slot:disabled {
+  background: #202a23;
+  border-color: #2d382e;
+  color: #8c9b84;
+}
+[data-theme="dark"] .slot:disabled span {
+  color: #8c9b84;
+}
+[data-theme="dark"] .primary {
+  background: #d4e7a8;
+  color: #203322;
+}
+[data-theme="dark"] .text-button {
+  color: #d4e7a8;
+}
+[data-theme="dark"] .notice {
+  color: #c9ddb3;
+}
+[data-theme="dark"] .notice.warning {
+  background: #44371e;
+  color: #f2d699;
+}
+[data-theme="dark"] .booking-summary,
+[data-theme="dark"] .booking-row,
+[data-theme="dark"] .count {
+  border-color: #3e4c38;
+}
+[data-theme="dark"] .row-actions button {
+  background: #28382a;
+  border-color: #4b5c40;
+  color: #d7e5c2;
+}
+[data-theme="dark"] .row-actions .danger {
+  background: #392b24;
+  border-color: #674d3a;
+  color: #efbda1;
+}
+[data-theme="dark"] .checkbox input {
+  accent-color: #c5dda4;
+}
+@media (max-width: 600px) {
+  .topbar {
+    gap: 12px;
+  }
+  .header-actions {
+    gap: 0;
+  }
+  .header-actions .avatar {
+    display: none;
+  }
+  .theme-toggle {
+    font-size: 10px;
+    padding: 8px;
+  }
+  .topbar .slash {
+    margin: 0 5px;
+  }
+}

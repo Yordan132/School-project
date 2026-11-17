@@ -16,6 +16,8 @@ import SlotGrid from "./components/SlotGrid.jsx";
 import BookingForm from "./components/BookingForm.jsx";
 import BookingList from "./components/BookingList.jsx";
 
+import ThemeToggle from "./components/ThemeToggle.jsx";
+
 const EMPTY = [];
 
 export default function App() {
@@ -182,7 +184,10 @@ export default function App() {
             Работно пространство <span className="slash">/</span>{" "}
             <strong>Резервации</strong>
           </span>
-          <span className="avatar">Й</span>
+          <div className="header-actions">
+            <ThemeToggle />
+            <span className="avatar">Й</span>
+          </div>
         </header>
         <div className="page-content">
           <div className="intro">
