@@ -1,15 +1,26 @@
-import { businesses } from './businesses.js';
-import { today, getHours } from '../utils/booking.js';
+import { businesses } from "./businesses.js";
+import { today, getSlots } from "../utils/booking.js";
 
 export function createDemoBookings(date = today()) {
-  return businesses.flatMap(business => {
-    const hours = getHours(business, date);
-    if (!hours.length) return [];
-    return business.resources.map((resource, index) => ({
-      id: `demo-${business.id}-${resource.id}`, businessId: business.id,
-      resourceId: resource.id, date, start: hours[0][0] + index * business.step,
-      end: hours[0][0] + index * business.step + business.durations[0],
-      quantity: resource.capacity === 1 ? 1 : 3, customer: ['Алекс Иванов', 'Елица Петрова'][index % 2],
-    }));
-  });
+  return businesses.flatMap((business) =>
+    business.resources.flatMap((resource, index) => {
+      const duration = Math.min(...business.durations);
+      const quantity = Math.min(3, resource.capacity);
+      const slots = getSlots(business, resource, date, duration, quantity, []);
+      if (!slots.length) return [];
+      const start = slots[index % slots.length].start;
+      return [
+        {
+          id: `demo-${business.id}-${resource.id}`,
+          businessId: business.id,
+          resourceId: resource.id,
+          date,
+          start,
+          end: start + duration,
+          quantity,
+          customer: ["Алекс Иванов", "Елица Петрова"][index % 2],
+        },
+      ];
+    }),
+  );
 }
