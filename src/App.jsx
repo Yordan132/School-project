@@ -127,7 +127,7 @@ export default function App() {
     <div className="app-shell">
       <aside className="sidebar">
         <a className="logo" href="#">
-          <span>м.</span> място<span className="logo-dot">®</span>
+          <span>O.</span> OnePlace
         </a>
         <p className="sidebar-caption">
           Един график.
@@ -206,13 +206,13 @@ export default function App() {
                   <>
                     Всички клиенти.
                     <br />
-                    Едно <em>място.</em>
+                    Един <em>OnePlace.</em>
                   </>
                 ) : (
                   <>
-                    Запазете своето
+                    Вашите резервации в
                     <br />
-                    <em>място.</em>
+                    <em>OnePlace.</em>
                   </>
                 )}
               </h1>
@@ -282,7 +282,7 @@ export default function App() {
             <BookingList bookings={visible} onEdit={edit} onDelete={remove} />
           )}
           <footer>
-            <span>място · Универсална система за резервации</span>
+            <span>OnePlace · Универсална система за резервации</span>
             <span>Демо профили · React + Vite</span>
           </footer>
         </div>

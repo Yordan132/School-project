@@ -1034,3 +1034,8 @@ footer {
     font-size: 11px;
   }
 }
+
+/* Компактно лого OnePlace, включително в тясната странична лента. */
+.logo { font-size: 24px; gap: 8px; }
+.logo > span:first-child { width: 34px; height: 34px; flex-shrink: 0; font-size: 24px; }
+@media (min-width: 601px) and (max-width: 1100px) { .logo { font-size: 20px; } }
