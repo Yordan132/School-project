@@ -2,11 +2,18 @@ import { businesses } from "../data/businesses.js";
 import { createDemoBookings } from "../data/seed.js";
 import { validateBooking } from "./booking.js";
 
-const STORAGE_KEY = "myasto-bookings-v1";
+const STORAGE_KEY = "myasto-bookings-v2";
+import { customers } from "../data/profiles.js";
 export function loadBookings() {
   try {
     const raw = localStorage.getItem(STORAGE_KEY);
-    if (raw === null) return { bookings: createDemoBookings(), warning: "" };
+    if (raw === null)
+      return {
+        bookings: createDemoBookings(),
+        warning: localStorage.getItem("myasto-bookings-v1")
+          ? "Заредени са новите отдели и демо профили. Старите данни са запазени отделно в браузъра."
+          : "",
+      };
     const parsed = JSON.parse(raw);
     if (!Array.isArray(parsed)) throw new Error("Invalid data");
     const accepted = [];
@@ -16,6 +23,11 @@ export function loadBookings() {
       );
       if (
         !business ||
+        !customers.some(
+          (customer) =>
+            customer.id === booking.customerId &&
+            customer.name === booking.customer,
+        ) ||
         typeof booking.id !== "string" ||
         accepted.some((item) => item.id === booking.id) ||
         validateBooking(booking, business, accepted)

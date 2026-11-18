@@ -29,6 +29,7 @@ test("new business seeds respect small capacity and short working windows", () =
 
 test("all shipped configurations satisfy the documented grid contract", () => {
   for (const business of businesses) {
+    if (business.mode === "nights") continue;
     assert.ok(business.step > 0 && 1440 % business.step === 0);
     for (const duration of business.durations)
       assert.ok(duration > 0 && duration % business.step === 0);

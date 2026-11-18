@@ -1,19 +1,10 @@
+import { isValidDate } from "./dates.js";
+import { validateStay } from "./hotels.js";
+export { today, isValidDate } from "./dates.js";
+
 // Часовете са минути от началото на деня: 09:30 = 570.
 export function formatTime(minutes) {
   return `${String(Math.floor(minutes / 60)).padStart(2, "0")}:${String(minutes % 60).padStart(2, "0")}`;
-}
-
-export function today() {
-  const date = new Date();
-  return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}-${String(date.getDate()).padStart(2, "0")}`;
-}
-
-export function isValidDate(value) {
-  if (!/^\d{4}-\d{2}-\d{2}$/.test(value)) return false;
-  const date = new Date(`${value}T12:00:00Z`);
-  return (
-    !Number.isNaN(date.getTime()) && date.toISOString().slice(0, 10) === value
-  );
 }
 
 export function getHours(business, date) {
@@ -31,7 +22,7 @@ export function buildIndex(bookings) {
     const key = bookingKey(
       booking.businessId,
       booking.resourceId,
-      booking.date,
+      booking.endDate ? "*" : booking.date,
     );
     if (!index.has(key)) index.set(key, []);
     index.get(key).push(booking);
@@ -92,6 +83,13 @@ export function validateBooking(booking, business, bookings) {
     return "Невалиден ресурс или бизнес.";
   if (!isValidDate(booking.date)) return "Изберете валидна дата.";
   if (
+    business.mode === "nights"
+      ? booking.start !== undefined || booking.end !== undefined
+      : booking.endDate !== undefined
+  ) {
+    return "Несъвместими полета за часова и хотелска резервация.";
+  }
+  if (
     typeof booking.customer !== "string" ||
     !booking.customer.trim() ||
     booking.customer.length > 80
@@ -103,6 +101,12 @@ export function validateBooking(booking, business, bookings) {
     booking.quantity > resource.capacity
   )
     return "Невалиден брой места за този капацитет.";
+  if (business.mode === "nights")
+    return validateStay(
+      booking,
+      resource,
+      bookings.filter((item) => item.businessId === business.id),
+    );
   const { start, end } = booking;
   if (
     !Number.isInteger(start) ||
