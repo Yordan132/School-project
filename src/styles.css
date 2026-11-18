@@ -972,6 +972,47 @@ footer {
 .hotel-availability > span {
   font-size: 13px;
 }
+.suggestions {
+  margin-top: 20px;
+  padding: 16px;
+  border: 1px solid #dfe4da;
+  border-radius: 12px;
+  background: #f7f9f2;
+}
+.suggestions h3 {
+  margin: 0;
+  color: #304538;
+  font-size: 14px;
+}
+.suggestions p {
+  margin: 6px 0 0;
+  color: #65735f;
+  font-size: 11px;
+}
+.suggestion-list {
+  display: grid;
+  gap: 8px;
+  margin-top: 12px;
+}
+.suggestion-option {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  width: 100%;
+  padding: 11px 12px;
+  border: 1px solid #dfe4da;
+  border-radius: 8px;
+  background: #fff;
+  color: #304538;
+  text-align: left;
+}
+.suggestion-option strong {
+  font-size: 12px;
+}
+.suggestion-option small {
+  color: #65735f;
+  font-size: 10px;
+}
 .stats .stat-department {
   font-size: 16px;
   line-height: 1.6;
@@ -996,6 +1037,19 @@ footer {
 [data-theme="dark"] .customer-card,
 [data-theme="dark"] .hotel-availability {
   border-color: #40513b;
+}
+[data-theme="dark"] .suggestions,
+[data-theme="dark"] .suggestion-option {
+  border-color: #40513b;
+  background: #1a2821;
+}
+[data-theme="dark"] .suggestions h3,
+[data-theme="dark"] .suggestion-option {
+  color: #e2ebe1;
+}
+[data-theme="dark"] .suggestions p,
+[data-theme="dark"] .suggestion-option small {
+  color: #b8c8ab;
 }
 @media (max-width: 850px) {
   .resource-cards,

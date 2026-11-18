@@ -6,6 +6,14 @@ import {
   addDays,
 } from "../src/utils/hotels.js";
 const resource = { id: "hotel", capacity: 3 };
+const typedResource = {
+  id: "typed-hotel",
+  capacity: 3,
+  roomTypes: [
+    { id: "single", capacity: 1 },
+    { id: "double", capacity: 2 },
+  ],
+};
 const stay = {
   id: "one",
   resourceId: "hotel",
@@ -37,6 +45,82 @@ test("counts peak occupancy and excludes reservation being edited", () => {
   assert.equal(
     hotelAvailability(resource, stay.date, stay.endDate, [stay], stay.id),
     3,
+  );
+});
+test("tracks typed rooms independently while accounting for untyped legacy stays", () => {
+  const doubleStay = {
+    ...stay,
+    resourceId: typedResource.id,
+    roomType: "double",
+    quantity: 2,
+  };
+  assert.equal(
+    hotelAvailability(
+      typedResource,
+      stay.date,
+      stay.endDate,
+      [doubleStay],
+      null,
+      "single",
+    ),
+    1,
+  );
+  assert.equal(
+    hotelAvailability(
+      typedResource,
+      stay.date,
+      stay.endDate,
+      [doubleStay],
+      null,
+      "double",
+    ),
+    0,
+  );
+
+  const legacyStay = {
+    ...stay,
+    resourceId: typedResource.id,
+    quantity: 1,
+  };
+  assert.equal(
+    hotelAvailability(
+      typedResource,
+      stay.date,
+      stay.endDate,
+      [legacyStay],
+      null,
+      "single",
+    ),
+    0,
+  );
+  assert.equal(
+    hotelAvailability(
+      typedResource,
+      stay.date,
+      stay.endDate,
+      [legacyStay],
+      null,
+      "double",
+    ),
+    1,
+  );
+});
+test("validates the selected room type and its capacity", () => {
+  assert.notEqual(
+    validateStay(
+      { ...stay, resourceId: typedResource.id, roomType: "single", quantity: 2 },
+      typedResource,
+      [],
+    ),
+    "",
+  );
+  assert.notEqual(
+    validateStay(
+      { ...stay, resourceId: typedResource.id, roomType: "unknown" },
+      typedResource,
+      [],
+    ),
+    "",
   );
 });
 test("rejects reversed, impossible, empty, too long and full stays", () => {

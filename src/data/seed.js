@@ -16,7 +16,14 @@ export function createDemoBookings(date = today()) {
         customer: customer.name,
       };
       if (business.mode === "nights")
-        return [{ ...common, endDate: addDays(date, 2), quantity: 1 }];
+        return [
+          {
+            ...common,
+            endDate: addDays(date, 2),
+            roomType: resource.roomTypes[0].id,
+            quantity: 1,
+          },
+        ];
       const duration = Math.min(...business.durations);
       const quantity = Math.min(3, resource.capacity);
       const slots = getSlots(business, resource, date, duration, quantity, []);

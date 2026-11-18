@@ -257,7 +257,7 @@ export default function App() {
           <p className="notice" role="status" aria-live="polite">
             {message ||
               (isAdmin
-                ? "Филтрирайте по клиент, отдел или дата."
+                ? "Филтрирайте по клиент, вид услуга или дата."
                 : "Изберете отдел, специалист или хотел и свободен период.")}
           </p>
           {(!isAdmin || editing) && (

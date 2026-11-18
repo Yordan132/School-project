@@ -7,15 +7,23 @@ export function hotelAvailability(
   departure,
   bookings,
   ignoredId = null,
+  roomTypeId = null,
 ) {
   if (!isValidDate(arrival) || !isValidDate(departure) || departure <= arrival)
     return 0;
+  const roomType = roomTypeId
+    ? resource.roomTypes?.find((item) => item.id === roomTypeId)
+    : null;
+  const capacity = roomTypeId ? roomType?.capacity || 0 : resource.capacity;
   // Същият принцип като при часовете: + при начало, − при край.
   const events = [];
   for (const booking of bookings) {
     if (
       booking.resourceId !== resource.id ||
       booking.id === ignoredId ||
+      (roomTypeId &&
+        booking.roomType &&
+        booking.roomType !== roomTypeId) ||
       booking.date >= departure ||
       booking.endDate <= arrival
     )
@@ -37,7 +45,7 @@ export function hotelAvailability(
     occupied += change;
     peak = Math.max(peak, occupied);
   }
-  return resource.capacity - peak;
+  return Math.max(0, capacity - peak);
 }
 
 export function validateStay(booking, resource, bookings) {
@@ -45,14 +53,20 @@ export function validateStay(booking, resource, bookings) {
   if (nights < 1 || nights > 30)
     return "Изберете валидно настаняване и напускане за 1 до 30 нощувки.";
   if (
+    booking.roomType !== undefined &&
+    !resource.roomTypes?.some((item) => item.id === booking.roomType)
+  )
+    return "Изберете валиден вид стая.";
+  if (
     hotelAvailability(
       resource,
       booking.date,
       booking.endDate,
       bookings,
       booking.id,
+      booking.roomType,
     ) < booking.quantity
   )
-    return "Недостатъчно свободни стаи за целия престой.";
+    return "Недостатъчно свободни стаи от този вид за целия престой.";
   return "";
 }

@@ -5,7 +5,7 @@ import BookingList from "./BookingList.jsx";
 
 export default function AdminPanel({ bookings, onEdit, onDelete, onReset }) {
   const [customerId, setCustomerId] = useState("all");
-  const [department, setDepartment] = useState("all");
+  const [serviceType, setServiceType] = useState("all");
   const [date, setDate] = useState("");
   const counts = useMemo(() => {
     const result = new Map();
@@ -16,7 +16,9 @@ export default function AdminPanel({ bookings, onEdit, onDelete, onReset }) {
   const filtered = bookings.filter(
     (item) =>
       (customerId === "all" || item.customerId === customerId) &&
-      (department === "all" || item.businessId === department) &&
+      (serviceType === "all" ||
+        businesses.find((business) => business.id === item.businessId)
+          ?.type === serviceType) &&
       (!date ||
         (item.endDate
           ? item.date <= date && item.endDate > date
@@ -59,17 +61,19 @@ export default function AdminPanel({ bookings, onEdit, onDelete, onReset }) {
             </select>
           </label>
           <label>
-            Отдел
+            Вид услуга
             <select
-              value={department}
-              onChange={(event) => setDepartment(event.target.value)}
+              value={serviceType}
+              onChange={(event) => setServiceType(event.target.value)}
             >
-              <option value="all">Всички отдели</option>
-              {businesses.map((business) => (
-                <option key={business.id} value={business.id}>
-                  {business.name}
-                </option>
-              ))}
+              <option value="all">Всички видове услуги</option>
+              {[...new Set(businesses.map((business) => business.type))].map(
+                (type) => (
+                  <option key={type} value={type}>
+                    {type}
+                  </option>
+                ),
+              )}
             </select>
           </label>
           <label>
@@ -84,7 +88,7 @@ export default function AdminPanel({ bookings, onEdit, onDelete, onReset }) {
             className="text-button"
             onClick={() => {
               setCustomerId("all");
-              setDepartment("all");
+              setServiceType("all");
               setDate("");
             }}
           >

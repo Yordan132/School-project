@@ -52,6 +52,30 @@ test("rejects hourly bookings containing hotel dates before indexing them", () =
   }
 });
 
+test("keeps older hotel reservations that do not yet have a room type", () => {
+  const records = [
+    {
+      id: "legacy-hotel",
+      businessId: "hotels",
+      resourceId: "spa",
+      customerId: "alex",
+      customer: "Алекс Иванов",
+      date: "2026-12-07",
+      endDate: "2026-12-09",
+      quantity: 1,
+    },
+  ];
+  globalThis.localStorage = {
+    getItem: (key) =>
+      key === "myasto-bookings-v2" ? JSON.stringify(records) : null,
+  };
+  try {
+    assert.deepEqual(loadBookings(), { bookings: records, warning: "" });
+  } finally {
+    delete globalThis.localStorage;
+  }
+});
+
 test("v1 reservations remain untouched and are not silently assigned an owner", () => {
   const old = '[{"id":"legacy"}]';
   const values = new Map([["myasto-bookings-v1", old]]);

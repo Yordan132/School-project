@@ -8,6 +8,7 @@ export default function BookingForm({
   duration,
   quantity,
   resource,
+  roomType,
   date,
   endDate,
   isHotel,
@@ -44,7 +45,7 @@ export default function BookingForm({
       </label>
       <p className="muted">
         {isHotel
-          ? `${nightCount(date, endDate)} нощувки · ${quantity} стаи`
+          ? `${roomType.name} · ${nightCount(date, endDate)} нощувки · ${quantity} стаи`
           : `${duration} минути · ${quantity} място`}
       </p>
       <button className="primary" disabled={!available} type="submit">

@@ -30,6 +30,9 @@ export default function BookingList({
               (item) => item.id === booking.resourceId,
             );
             const hotel = business.mode === "nights";
+            const roomType = resource.roomTypes?.find(
+              (item) => item.id === booking.roomType,
+            );
             return (
               <article
                 className="booking-row"
@@ -50,7 +53,7 @@ export default function BookingList({
                   <span>
                     {business.name}
                     {hotel
-                      ? ` · ${booking.quantity} стаи · ${nightCount(booking.date, booking.endDate)} нощувки`
+                      ? ` · ${roomType?.name || "видът не е посочен"} · ${booking.quantity} стаи · ${nightCount(booking.date, booking.endDate)} нощувки`
                       : ""}
                   </span>
                 </div>
