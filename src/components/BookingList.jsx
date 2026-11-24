@@ -13,7 +13,6 @@ export default function BookingList({
     <section className="panel reservations">
       <div className="section-heading">
         <div>
-          <span className="eyebrow">РЕЗЕРВАЦИИ ВЪВ ВСИЧКИ ОТДЕЛИ</span>
           <h2>{title}</h2>
         </div>
         <span className="count">{bookings.length}</span>
@@ -22,6 +21,11 @@ export default function BookingList({
         <p className="empty">Няма резервации за показване.</p>
       ) : (
         <div className="booking-list">
+          <div className="list-columns" aria-hidden="true">
+            <span>Дата и час</span>
+            <span>Клиент и резервация</span>
+            <span>Действия</span>
+          </div>
           {bookings.map((booking) => {
             const business = businesses.find(
               (item) => item.id === booking.businessId,

@@ -26,30 +26,46 @@ export default function BookingForm({
     >
       <div className="section-heading">
         <h2>{editing ? "Промяна на резервация" : "Вашата резервация"}</h2>
-        <span className="step">02</span>
       </div>
-      <p className="muted">{resource.name}</p>
+      <dl className="summary-details">
+        <div>
+          <dt>Клиент</dt>
+          <dd>{customer}</dd>
+        </div>
+        <div>
+          <dt>{isHotel ? "Хотел" : "Специалист"}</dt>
+          <dd>{resource.name}</dd>
+        </div>
+        {isHotel && (
+          <div>
+            <dt>Вид стая</dt>
+            <dd>{roomType.name}</dd>
+          </div>
+        )}
+        <div>
+          <dt>{isHotel ? "Настаняване" : "Дата"}</dt>
+          <dd>{displayDate(date)}</dd>
+        </div>
+        {isHotel && (
+          <div>
+            <dt>Напускане</dt>
+            <dd>{displayDate(endDate)}</dd>
+          </div>
+        )}
+      </dl>
       <div className="booking-summary">
-        <span>{isHotel ? "Период на престоя" : "Избран час"}</span>
+        <span>{isHotel ? "Вашият престой" : "Избран час"}</span>
         <strong>
           {isHotel
-            ? `${displayDate(date)} – ${displayDate(endDate)}`
+            ? `${nightCount(date, endDate)} нощувки · ${quantity} стаи`
             : selected === null
               ? "Изберете от графика"
               : `${formatTime(selected)} – ${formatTime(selected + duration)}`}
         </strong>
+        {!isHotel && <span>{duration} минути</span>}
       </div>
-      <label>
-        Клиент
-        <input value={customer} readOnly />
-      </label>
-      <p className="muted">
-        {isHotel
-          ? `${roomType.name} · ${nightCount(date, endDate)} нощувки · ${quantity} стаи`
-          : `${duration} минути · ${quantity} място`}
-      </p>
       <button className="primary" disabled={!available} type="submit">
-        {editing ? "Запази промените" : "Потвърди резервация"} <span>→</span>
+        {editing ? "Запази промените" : "Потвърди резервация"}
       </button>
       {editing && (
         <button className="text-button" type="button" onClick={onCancel}>

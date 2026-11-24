@@ -127,14 +127,9 @@ export default function App() {
     <div className="app-shell">
       <aside className="sidebar">
         <a className="logo" href="#">
-          <span>O.</span> OnePlace
+          OnePlace
+          <span className="brand-dot" />
         </a>
-        <p className="sidebar-caption">
-          Един график.
-          <br />
-          Много възможности.
-        </p>
-        <span className="nav-label">ОТДЕЛИ</span>
         <nav aria-label="Избор на отдел">
           {businesses.map((item) => (
             <button
@@ -143,7 +138,7 @@ export default function App() {
               aria-pressed={item.id === businessId}
               onClick={() => changeDepartment(item.id)}
             >
-              <span className="business-icon">{item.icon}</span>
+              <span className="nav-dot" aria-hidden="true" />
               <span>
                 <strong>{item.name}</strong>
                 <small>{item.type}</small>
@@ -154,34 +149,22 @@ export default function App() {
         <div className="sidebar-bottom">
           <span className="live-dot" /> Демо пространство
           <p>
-            Три отдела.
+            Един график.
             <br />
-            Личен профил и обща наличност.
+            Много възможности.
           </p>
         </div>
       </aside>
       <main>
         <header className="topbar">
-          <strong>
+          <span className="panel-label">
             {isAdmin ? "Администраторски панел" : "Клиентски панел"}
-          </strong>
+          </span>
           <div className="header-actions">
-            <ThemeToggle />
-            <span className="avatar">{profile.name[0]}</span>
-          </div>
-        </header>
-        <div className="page-content">
-          <section className="profile-bar" aria-label="Демо профили">
-            <div>
-              <span className="eyebrow">ДЕМО ПРОФИЛ</span>
-              <strong>{profile.name}</strong>
-              <span className="small muted">
-                Примерни профили за учебна демонстрация, без защитен вход.
-              </span>
-            </div>
-            <label>
-              Активен профил
+            <label className="profile-select">
+              Демо профил
               <select
+                aria-label="Активен профил"
                 value={profileId}
                 onChange={(event) => changeProfile(event.target.value)}
               >
@@ -193,72 +176,42 @@ export default function App() {
                 ))}
               </select>
             </label>
-          </section>
-          <div className="intro">
+            <ThemeToggle />
+          </div>
+        </header>
+        <div className="page-content">
+          <div className="page-heading">
             <div>
-              <span className="eyebrow">
-                {isAdmin
-                  ? "УПРАВЛЕНИЕ НА РЕЗЕРВАЦИИ"
-                  : "ВАШЕТО ВРЕМЕ. ВАШИЯТ ИЗБОР."}
-              </span>
               <h1>
-                {isAdmin ? (
-                  <>
-                    Всички клиенти.
-                    <br />
-                    Един <em>OnePlace.</em>
-                  </>
-                ) : (
-                  <>
-                    Вашите резервации в
-                    <br />
-                    <em>OnePlace.</em>
-                  </>
-                )}
+                {isAdmin
+                  ? "Управление на резервации"
+                  : business.mode === "nights"
+                    ? "Резервирайте престой"
+                    : "Запазете час"}
               </h1>
               <p>
                 {isAdmin
-                  ? "Преглед и управление на резервациите във всички отдели."
+                  ? `${customers.length} клиенти · ${visible.length} резервации във всички отдели`
                   : business.description}
               </p>
             </div>
-            <div className="business-card">
-              <span className="business-icon large">{business.icon}</span>
-              <span className="eyebrow">{business.type}</span>
-              <h2>{business.name}</h2>
-              <p>{business.description}</p>
-              <span className="badge">
-                3 избора ·{" "}
-                {business.mode === "nights"
-                  ? "Резервации по нощувки"
-                  : "Резервации по часове"}
+            {!isAdmin && (
+              <span className="personal-count">
+                {visible.length} мои резервации
               </span>
-            </div>
-          </div>
-          <div className="stats">
-            <div>
-              <span>{isAdmin ? "Всички резервации" : "Мои резервации"}</span>
-              <strong>{visible.length.toString().padStart(2, "0")}</strong>
-            </div>
-            <div>
-              <span>{isAdmin ? "Клиенти" : "Отдели"}</span>
-              <strong>{isAdmin ? customers.length : businesses.length}</strong>
-            </div>
-            <div>
-              <span>Избран отдел</span>
-              <strong className="stat-department">{business.name}</strong>
-            </div>
+            )}
           </div>
           {warning && (
             <p className="notice warning" role="alert">
               {warning}
             </p>
           )}
-          <p className="notice" role="status" aria-live="polite">
-            {message ||
-              (isAdmin
-                ? "Филтрирайте по клиент, вид услуга или дата."
-                : "Изберете отдел, специалист или хотел и свободен период.")}
+          <p
+            className={`notice ${message ? "has-message" : ""}`}
+            role="status"
+            aria-live="polite"
+          >
+            {message}
           </p>
           {(!isAdmin || editing) && (
             <ReservationEditor
@@ -283,7 +236,7 @@ export default function App() {
           )}
           <footer>
             <span>OnePlace · Универсална система за резервации</span>
-            <span>Демо профили · React + Vite</span>
+            <span>Демо профили · без защитен вход</span>
           </footer>
         </div>
       </main>

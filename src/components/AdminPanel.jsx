@@ -26,24 +26,6 @@ export default function AdminPanel({ bookings, onEdit, onDelete, onReset }) {
   );
   return (
     <>
-      <section className="panel">
-        <div className="section-heading">
-          <div>
-            <span className="eyebrow">КЛИЕНТСКА БАЗА</span>
-            <h2>Всички клиенти</h2>
-          </div>
-          <span className="count">{customers.length}</span>
-        </div>
-        <div className="customer-cards">
-          {customers.map((customer) => (
-            <article className="customer-card" key={customer.id}>
-              <strong>{customer.name}</strong>
-              <span>{customer.email}</span>
-              <small>{counts.get(customer.id) || 0} резервации</small>
-            </article>
-          ))}
-        </div>
-      </section>
       <section className="panel admin-filters">
         <div className="filters">
           <label>
@@ -102,6 +84,23 @@ export default function AdminPanel({ bookings, onEdit, onDelete, onReset }) {
         onEdit={onEdit}
         onDelete={onDelete}
       />
+      <section className="panel customer-section">
+        <div className="section-heading">
+          <div>
+            <h2>Всички клиенти</h2>
+          </div>
+          <span className="count">{customers.length}</span>
+        </div>
+        <div className="customer-cards">
+          {customers.map((customer) => (
+            <article className="customer-card" key={customer.id}>
+              <strong>{customer.name}</strong>
+              <span>{customer.email}</span>
+              <small>{counts.get(customer.id) || 0} резервации</small>
+            </article>
+          ))}
+        </div>
+      </section>
       <button className="text-button" onClick={onReset}>
         Възстанови примерните данни
       </button>

@@ -56,8 +56,7 @@ export default function ReservationEditor({
     () =>
       isHotel
         ? business.resources.flatMap(
-            (item) =>
-              index.get(bookingKey(business.id, item.id, "*")) || EMPTY,
+            (item) => index.get(bookingKey(business.id, item.id, "*")) || EMPTY,
           )
         : EMPTY,
     [isHotel, business, index],
@@ -186,40 +185,36 @@ export default function ReservationEditor({
   }
   return (
     <div id="booking-area">
-      <div
-        className="resource-cards"
-        aria-label={`Избор: ${business.resourceLabel}`}
-      >
-        {business.resources.map((item) => (
-          <button
-            type="button"
-            key={item.id}
-            aria-pressed={item.id === resourceId}
-            className={`resource-card ${item.id === resourceId ? "chosen" : ""}`}
-            onClick={() => {
-              setResourceId(item.id);
-              if (isHotel) setRoomTypeId(item.roomTypes[0].id);
-              setSelected(null);
-              setQuantity(1);
-            }}
-          >
-            <span>{business.icon}</span>
-            <strong>{item.name}</strong>
-            <small>{item.detail}</small>
-            {isHotel && <small>{item.capacity} стаи общо</small>}
-          </button>
-        ))}
-      </div>
       <div className="booking-layout">
         <section className="panel availability">
           <div className="section-heading">
-            <div>
-              <span className="eyebrow">
-                {isHotel ? "ПЛАНИРАЙТЕ ВАШИЯ ПРЕСТОЙ" : "НАМЕРЕТЕ ВАШЕТО ВРЕМЕ"}
-              </span>
-              <h2>{isHotel ? "Наличност на стаи" : "Свободни часове"}</h2>
-            </div>
-            <span className="step">01</span>
+            <h2>{isHotel ? "Изберете хотел" : "Изберете специалист"}</h2>
+          </div>
+          <div
+            className="resource-cards"
+            aria-label={`Избор: ${business.resourceLabel}`}
+          >
+            {business.resources.map((item) => (
+              <button
+                type="button"
+                key={item.id}
+                aria-pressed={item.id === resourceId}
+                className={`resource-card ${item.id === resourceId ? "chosen" : ""}`}
+                onClick={() => {
+                  setResourceId(item.id);
+                  if (isHotel) setRoomTypeId(item.roomTypes[0].id);
+                  setSelected(null);
+                  setQuantity(1);
+                }}
+              >
+                <span className="selection-dot" aria-hidden="true" />
+                <span className="resource-description">
+                  <strong>{item.name}</strong>
+                  <small>{item.detail}</small>
+                </span>
+                {isHotel && <small>{item.capacity} стаи общо</small>}
+              </button>
+            ))}
           </div>
           <div className="filters">
             <label>
@@ -289,7 +284,9 @@ export default function ReservationEditor({
                     min="1"
                     max={roomType?.capacity}
                     value={quantity}
-                    onChange={(event) => setQuantity(Number(event.target.value))}
+                    onChange={(event) =>
+                      setQuantity(Number(event.target.value))
+                    }
                   />
                 </label>
               </>
@@ -364,8 +361,8 @@ export default function ReservationEditor({
                     </strong>
                     <small>
                       {displayDate(suggestion.date)} –{" "}
-                      {displayDate(suggestion.endDate)} ·{" "}
-                      {suggestion.remaining} свободни
+                      {displayDate(suggestion.endDate)} · {suggestion.remaining}{" "}
+                      свободни
                     </small>
                   </button>
                 ))}
