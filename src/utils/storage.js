@@ -2,8 +2,9 @@ import { businesses } from "../data/businesses.js";
 import { createDemoBookings } from "../data/seed.js";
 import { validateBooking } from "./booking.js";
 
-const STORAGE_KEY = "myasto-bookings-v2";
 import { customers } from "../data/profiles.js";
+
+const STORAGE_KEY = "myasto-bookings-v2";
 export function loadBookings() {
   try {
     const raw = localStorage.getItem(STORAGE_KEY);
@@ -21,17 +22,15 @@ export function loadBookings() {
       const business = businesses.find(
         (item) => item.id === booking?.businessId,
       );
-      if (
-        !business ||
-        !customers.some(
-          (customer) =>
-            customer.id === booking.customerId &&
-            customer.name === booking.customer,
-        ) ||
-        typeof booking.id !== "string" ||
-        accepted.some((item) => item.id === booking.id) ||
-        validateBooking(booking, business, accepted)
-      )
+      const customer = customers.find(
+        (item) => item.id === booking?.customerId,
+      );
+      if (!business || !customer || customer.name !== booking.customer)
+        throw new Error("Invalid owner or department");
+      if (typeof booking.id !== "string") throw new Error("Invalid ID");
+      if (accepted.some((item) => item.id === booking.id))
+        throw new Error("Duplicate ID");
+      if (validateBooking(booking, business, accepted))
         throw new Error("Invalid booking");
       accepted.push(booking);
     }

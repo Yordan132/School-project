@@ -4,12 +4,15 @@ export { today, isValidDate } from "./dates.js";
 
 // Часовете са минути от началото на деня: 09:30 = 570.
 export function formatTime(minutes) {
-  return `${String(Math.floor(minutes / 60)).padStart(2, "0")}:${String(minutes % 60).padStart(2, "0")}`;
+  const hours = String(Math.floor(minutes / 60)).padStart(2, "0");
+  const rest = String(minutes % 60).padStart(2, "0");
+  return `${hours}:${rest}`;
 }
 
 export function getHours(business, date) {
   if (!isValidDate(date)) return [];
-  return business.hours[new Date(`${date}T12:00:00Z`).getUTCDay()] || [];
+  const day = new Date(`${date}T12:00:00Z`).getUTCDay();
+  return business.hours[day] || [];
 }
 
 export function bookingKey(businessId, resourceId, date) {
@@ -38,8 +41,13 @@ export function buildOccupancy(bookings, step, ignoredId = null) {
     changes[booking.start / step] += booking.quantity;
     changes[booking.end / step] -= booking.quantity;
   }
+  const occupancy = [];
   let occupied = 0;
-  return changes.slice(0, -1).map((change) => (occupied += change));
+  for (let cell = 0; cell < changes.length - 1; cell++) {
+    occupied += changes[cell];
+    occupancy.push(occupied);
+  }
+  return occupancy;
 }
 
 function remainingCapacity(resource, start, end, step, occupancy) {
@@ -82,11 +90,10 @@ export function validateBooking(booking, business, bookings) {
   if (booking.businessId !== business.id || !resource)
     return "Невалиден ресурс или бизнес.";
   if (!isValidDate(booking.date)) return "Изберете валидна дата.";
-  if (
-    business.mode === "nights"
-      ? booking.start !== undefined || booking.end !== undefined
-      : booking.endDate !== undefined
-  ) {
+  const isHotel = business.mode === "nights";
+  const hasTime = booking.start !== undefined || booking.end !== undefined;
+  const hasDeparture = booking.endDate !== undefined;
+  if ((isHotel && hasTime) || (!isHotel && hasDeparture)) {
     return "Несъвместими полета за часова и хотелска резервация.";
   }
   if (

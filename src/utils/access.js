@@ -1,11 +1,9 @@
 import { validateBooking } from "./booking.js";
 
 export function canManageBooking(profile, booking) {
-  return Boolean(
-    profile &&
-    booking &&
-    (profile.role === "admin" || profile.id === booking.customerId),
-  );
+  if (!profile || !booking) return false;
+  if (profile.role === "admin") return true;
+  return profile.id === booking.customerId;
 }
 export function visibleBookings(bookings, profile) {
   return bookings.filter((booking) => canManageBooking(profile, booking));

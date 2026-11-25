@@ -17,11 +17,9 @@ import AdminPanel from "./components/AdminPanel.jsx";
 
 function initialProfile() {
   try {
-    return (
-      profiles.find(
-        (profile) => profile.id === localStorage.getItem("myasto-profile"),
-      )?.id || customers[0].id
-    );
+    const savedId = localStorage.getItem("myasto-profile");
+    const exists = profiles.some((profile) => profile.id === savedId);
+    return exists ? savedId : customers[0].id;
   } catch {
     return customers[0].id;
   }
@@ -38,10 +36,14 @@ export default function App() {
   const [businessId, setBusinessId] = useState(businesses[0].id);
   const [editing, setEditing] = useState(null);
   const [message, setMessage] = useState("");
-  const [formVersion, setFormVersion] = useState(0);
+  const [editorVersion, setEditorVersion] = useState(0);
   const profile = profiles.find((item) => item.id === profileId);
   const isAdmin = profile.role === "admin";
   const business = businesses.find((item) => item.id === businessId);
+  // Състояние -> изчислени данни -> действия -> HTML на екрана.
+  let pageTitle = "Запазете час";
+  if (business.mode === "nights") pageTitle = "Резервирайте престой";
+  if (isAdmin) pageTitle = "Управление на резервации";
   const index = useMemo(() => buildIndex(bookings), [bookings]);
   const visible = useMemo(
     () =>
@@ -68,7 +70,8 @@ export default function App() {
 
   function clearEditor() {
     setEditing(null);
-    setFormVersion((value) => value + 1);
+    // Новият key създава чиста форма след запис или смяна на профил/отдел.
+    setEditorVersion((value) => value + 1);
   }
   function changeProfile(id) {
     setProfileId(id);
@@ -102,7 +105,7 @@ export default function App() {
     setBusinessId(booking.businessId);
     setEditing(booking);
     setMessage("Редактирате резервация.");
-    setFormVersion((value) => value + 1);
+    setEditorVersion((value) => value + 1);
     window.scrollTo({ top: 0, behavior: "smooth" });
   }
   function remove(id) {
@@ -191,13 +194,7 @@ export default function App() {
         <div className="page-content">
           <div className="page-heading">
             <div>
-              <h1>
-                {isAdmin
-                  ? "Управление на резервации"
-                  : business.mode === "nights"
-                    ? "Резервирайте престой"
-                    : "Запазете час"}
-              </h1>
+              <h1>{pageTitle}</h1>
               <p>
                 {isAdmin
                   ? `${customers.length} клиенти · ${visible.length} резервации във всички отдели`
@@ -224,7 +221,7 @@ export default function App() {
           </p>
           {(!isAdmin || editing) && (
             <ReservationEditor
-              key={`${profileId}-${businessId}-${formVersion}`}
+              key={editorVersion}
               business={business}
               profile={profile}
               index={index}

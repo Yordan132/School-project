@@ -9,6 +9,7 @@ export function today() {
   const date = new Date();
   return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}-${String(date.getDate()).padStart(2, "0")}`;
 }
+// Календарните сметки са в UTC, за да не се влияят от смяната на лятното часово време.
 export function addDays(date, days) {
   if (!isValidDate(date)) return "";
   const result = new Date(`${date}T12:00:00Z`);

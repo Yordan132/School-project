@@ -3,6 +3,9 @@ import { customers } from "../data/profiles.js";
 import { businesses } from "../data/businesses.js";
 import BookingList from "./BookingList.jsx";
 
+// Set премахва повтарящите се видове услуги от менюто.
+const serviceTypes = [...new Set(businesses.map((business) => business.type))];
+
 export default function AdminPanel({ bookings, onEdit, onDelete, onReset }) {
   const [customerId, setCustomerId] = useState("all");
   const [serviceType, setServiceType] = useState("all");
@@ -13,17 +16,15 @@ export default function AdminPanel({ bookings, onEdit, onDelete, onReset }) {
       result.set(booking.customerId, (result.get(booking.customerId) || 0) + 1);
     return result;
   }, [bookings]);
-  const filtered = bookings.filter(
-    (item) =>
-      (customerId === "all" || item.customerId === customerId) &&
-      (serviceType === "all" ||
-        businesses.find((business) => business.id === item.businessId)
-          ?.type === serviceType) &&
-      (!date ||
-        (item.endDate
-          ? item.date <= date && item.endDate > date
-          : item.date === date)),
-  );
+  // Всяка проверка отговаря на един филтър от екрана.
+  const filtered = bookings.filter((booking) => {
+    if (customerId !== "all" && booking.customerId !== customerId) return false;
+    const business = businesses.find((item) => item.id === booking.businessId);
+    if (serviceType !== "all" && business.type !== serviceType) return false;
+    if (!date) return true;
+    if (booking.endDate) return booking.date <= date && date < booking.endDate;
+    return booking.date === date;
+  });
   return (
     <>
       <section className="panel admin-filters">
@@ -49,13 +50,11 @@ export default function AdminPanel({ bookings, onEdit, onDelete, onReset }) {
               onChange={(event) => setServiceType(event.target.value)}
             >
               <option value="all">Всички видове услуги</option>
-              {[...new Set(businesses.map((business) => business.type))].map(
-                (type) => (
-                  <option key={type} value={type}>
-                    {type}
-                  </option>
-                ),
-              )}
+              {serviceTypes.map((type) => (
+                <option key={type} value={type}>
+                  {type}
+                </option>
+              ))}
             </select>
           </label>
           <label>

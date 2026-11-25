@@ -9,7 +9,7 @@ export function suggestTimeAlternatives({
   duration,
   quantity,
   index,
-  selected,
+  selected = null,
   ignoredId = null,
   daysAhead = 14,
   limit = 3,
@@ -54,6 +54,7 @@ export function suggestTimeAlternatives({
   return suggestions;
 }
 
+// Проверяваме само резервациите на конкретния хотел и спираме при 3 предложения.
 export function suggestHotelAlternatives({
   business,
   resourceId,
@@ -61,73 +62,73 @@ export function suggestHotelAlternatives({
   date,
   endDate,
   quantity,
-  bookings,
+  index,
   ignoredId = null,
   daysAhead = 14,
   limit = 3,
 }) {
   const nights = nightCount(date, endDate);
   if (
-    !isValidDate(date) ||
     nights < 1 ||
     nights > 30 ||
     !Number.isInteger(quantity) ||
-    quantity < 1
+    quantity < 1 ||
+    limit < 1
   )
     return [];
-
   const resource = business.resources.find((item) => item.id === resourceId);
-  const roomType = resource?.roomTypes?.find(
-    (item) => item.id === roomTypeId,
-  );
+  const roomType = resource?.roomTypes.find((item) => item.id === roomTypeId);
   if (!resource || !roomType) return [];
 
   const suggestions = [];
-  const seen = new Set();
-  function add(candidateResource, candidateType, arrival) {
+  function add(hotel, type, arrival) {
+    if (type.capacity < quantity) return;
     const departure = addDays(arrival, nights);
-    const available = hotelAvailability(
-      candidateResource,
+    const bookings = index.get(bookingKey(business.id, hotel.id, "*")) || [];
+    const remaining = hotelAvailability(
+      hotel,
       arrival,
       departure,
       bookings,
       ignoredId,
-      candidateType.id,
+      type.id,
     );
-    const key = `${candidateResource.id}:${candidateType.id}:${arrival}`;
-    if (available < quantity || seen.has(key)) return;
-    seen.add(key);
+    if (remaining < quantity) return;
     suggestions.push({
-      resourceId: candidateResource.id,
-      resourceName: candidateResource.name,
-      roomTypeId: candidateType.id,
-      roomTypeName: candidateType.name,
+      resourceId: hotel.id,
+      resourceName: hotel.name,
+      roomTypeId: type.id,
+      roomTypeName: type.name,
       date: arrival,
       endDate: departure,
-      remaining: available,
+      remaining,
     });
   }
 
-  for (const candidateType of resource.roomTypes) {
-    if (candidateType.id !== roomTypeId)
-      add(resource, candidateType, date);
+  // 1. Друг вид стая в същия хотел.
+  for (const type of resource.roomTypes) {
+    if (type.id !== roomTypeId) add(resource, type, date);
+    if (suggestions.length === limit) return suggestions;
   }
-  for (const candidateResource of business.resources) {
-    if (candidateResource.id === resourceId) continue;
-    const matchingType = candidateResource.roomTypes.find(
-      (item) => item.id === roomTypeId,
-    );
-    if (matchingType) add(candidateResource, matchingType, date);
+  // 2. Същият вид стая в друг хотел.
+  for (const hotel of business.resources) {
+    if (hotel.id === resourceId) continue;
+    const type = hotel.roomTypes.find((item) => item.id === roomTypeId);
+    if (type) add(hotel, type, date);
+    if (suggestions.length === limit) return suggestions;
   }
-  for (let offset = 1; offset <= daysAhead; offset += 1)
+  // 3. По-късно настаняване със същата продължителност.
+  for (let offset = 1; offset <= daysAhead; offset++) {
     add(resource, roomType, addDays(date, offset));
-  if (suggestions.length < limit) {
-    for (const candidateResource of business.resources) {
-      if (candidateResource.id === resourceId) continue;
-      for (const candidateType of candidateResource.roomTypes) {
-        if (candidateType.id !== roomTypeId) add(candidateResource, candidateType, date);
-      }
+    if (suggestions.length === limit) return suggestions;
+  }
+  // 4. Друг вид стая в друг хотел, ако все още няма достатъчно варианти.
+  for (const hotel of business.resources) {
+    if (hotel.id === resourceId) continue;
+    for (const type of hotel.roomTypes) {
+      if (type.id !== roomTypeId) add(hotel, type, date);
+      if (suggestions.length === limit) return suggestions;
     }
   }
-  return suggestions.slice(0, limit);
+  return suggestions;
 }

@@ -1,7 +1,11 @@
 // Разликите между отделите са в конфигурацията, а не в отделни приложения.
-const weekdays = Object.fromEntries(
-  [1, 2, 3, 4, 5].map((day) => [day, [[540, 1080]]]),
-);
+// Дните са 1 = понеделник ... 6 = събота; липсващ ден е почивен.
+// Часовете са минути: 480 = 08:00, 540 = 09:00.
+const clinicDay = [
+  [480, 720],
+  [780, 1020],
+]; // 08–12 и 13–17
+const salonDay = [[540, 1080]]; // 09–18
 export const businesses = [
   {
     id: "clinic",
@@ -13,15 +17,13 @@ export const businesses = [
     resourceLabel: "Лекар",
     step: 15,
     durations: [15, 30, 60],
-    hours: Object.fromEntries(
-      [1, 2, 3, 4, 5].map((day) => [
-        day,
-        [
-          [480, 720],
-          [780, 1020],
-        ],
-      ]),
-    ),
+    hours: {
+      1: clinicDay,
+      2: clinicDay,
+      3: clinicDay,
+      4: clinicDay,
+      5: clinicDay,
+    },
     resources: [
       {
         id: "cardiologist",
@@ -53,7 +55,14 @@ export const businesses = [
     resourceLabel: "Фризьор",
     step: 30,
     durations: [30, 60, 90],
-    hours: { ...weekdays, 6: [[600, 960]] },
+    hours: {
+      1: salonDay,
+      2: salonDay,
+      3: salonDay,
+      4: salonDay,
+      5: salonDay,
+      6: [[600, 960]],
+    },
     resources: [
       {
         id: "maria",

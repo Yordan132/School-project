@@ -3,11 +3,14 @@ import { customers } from "./profiles.js";
 import { today, getSlots } from "../utils/booking.js";
 import { addDays } from "../utils/dates.js";
 
+// По един пример за всеки ресурс, само когато има свободен работен интервал.
 export function createDemoBookings(date = today()) {
-  return businesses.flatMap((business) =>
-    business.resources.flatMap((resource, index) => {
-      const customer = customers[index % customers.length];
-      const common = {
+  const bookings = [];
+  for (const business of businesses) {
+    for (let position = 0; position < business.resources.length; position++) {
+      const resource = business.resources[position];
+      const customer = customers[position % customers.length];
+      const booking = {
         id: `demo-${business.id}-${resource.id}`,
         businessId: business.id,
         resourceId: resource.id,
@@ -15,21 +18,27 @@ export function createDemoBookings(date = today()) {
         customerId: customer.id,
         customer: customer.name,
       };
-      if (business.mode === "nights")
-        return [
-          {
-            ...common,
-            endDate: addDays(date, 2),
-            roomType: resource.roomTypes[0].id,
-            quantity: 1,
-          },
-        ];
-      const duration = Math.min(...business.durations);
-      const quantity = Math.min(3, resource.capacity);
-      const slots = getSlots(business, resource, date, duration, quantity, []);
-      if (!slots.length) return [];
-      const start = slots[index % slots.length].start;
-      return [{ ...common, start, end: start + duration, quantity }];
-    }),
-  );
+      if (business.mode === "nights") {
+        booking.endDate = addDays(date, 2);
+        booking.roomType = resource.roomTypes[0].id;
+        booking.quantity = 1;
+      } else {
+        const duration = Math.min(...business.durations);
+        booking.quantity = Math.min(3, resource.capacity);
+        const slots = getSlots(
+          business,
+          resource,
+          date,
+          duration,
+          booking.quantity,
+          [],
+        );
+        if (!slots.length) continue;
+        booking.start = slots[position % slots.length].start;
+        booking.end = booking.start + duration;
+      }
+      bookings.push(booking);
+    }
+  }
+  return bookings;
 }

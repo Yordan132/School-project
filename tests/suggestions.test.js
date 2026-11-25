@@ -45,7 +45,7 @@ test("hotel alternatives cover another type, hotel and nearby dates", () => {
     date: booking.date,
     endDate: booking.endDate,
     quantity: 2,
-    bookings: [booking],
+    index: buildIndex([booking]),
   });
   assert.ok(
     suggestions.some(
@@ -130,4 +130,44 @@ test("time alternatives offer later slots and search upcoming open days", () => 
       remaining: 1,
     },
   ]);
+});
+
+test("hotel suggestions stop once three choices exist and do not scan unrelated hotels", () => {
+  const resource = {
+    id: "one",
+    name: "Хотел",
+    roomTypes: ["single", "double", "studio", "apartment"].map((id) => ({
+      id,
+      name: id,
+      capacity: 2,
+    })),
+  };
+  const otherHotels = Array.from({ length: 1000 }, (_, i) => ({
+    ...resource,
+    id: `other-${i}`,
+  }));
+  let lookups = 0;
+  const index = new Map();
+  const originalGet = index.get.bind(index);
+  index.get = (key) => {
+    lookups++;
+    return originalGet(key);
+  };
+  const result = suggestHotelAlternatives({
+    business: { id: "hotels", resources: [resource, ...otherHotels] },
+    resourceId: "one",
+    roomTypeId: "single",
+    date: "2026-12-07",
+    endDate: "2026-12-09",
+    quantity: 1,
+    index,
+  });
+  assert.deepEqual(
+    result.map((item) => item.roomTypeId),
+    ["double", "studio", "apartment"],
+  );
+  assert.ok(
+    lookups <= 3,
+    "unrelated hotels should not be checked when enough choices exist",
+  );
 });

@@ -1,22 +1,10 @@
-import React, { useMemo, useState } from "react";
-import {
-  bookingKey,
-  buildOccupancy,
-  getHours,
-  getSlots,
-  formatTime,
-  today,
-} from "../utils/booking.js";
-import { addDays, displayDate, nightCount } from "../utils/dates.js";
-import { hotelAvailability } from "../utils/hotels.js";
-import {
-  suggestHotelAlternatives,
-  suggestTimeAlternatives,
-} from "../utils/suggestions.js";
+import React, { useCallback, useMemo, useState } from "react";
+import { formatTime } from "../utils/booking.js";
+import { addDays, displayDate } from "../utils/dates.js";
 import { createBookingId } from "../utils/ids.js";
+import { createForm, getAvailability } from "../utils/editor.js";
 import SlotGrid from "./SlotGrid.jsx";
 import BookingForm from "./BookingForm.jsx";
-const EMPTY = [];
 
 export default function ReservationEditor({
   business,
@@ -28,161 +16,73 @@ export default function ReservationEditor({
   onCancel,
 }) {
   const isHotel = business.mode === "nights";
-  const [resourceId, setResourceId] = useState(
-    editing?.resourceId || business.resources[0].id,
-  );
-  const [roomTypeId, setRoomTypeId] = useState(
-    editing?.roomType || business.resources[0].roomTypes?.[0]?.id || "",
-  );
-  const [date, setDate] = useState(editing?.date || today());
-  const [endDate, setEndDate] = useState(
-    editing?.endDate || addDays(today(), 1),
-  );
-  const [duration, setDuration] = useState(
-    editing && !isHotel
-      ? editing.end - editing.start
-      : business.durations?.[0] || 0,
-  );
-  const [quantity, setQuantity] = useState(editing?.quantity || 1);
-  const [selected, setSelected] = useState(editing?.start ?? null);
+  const [form, setForm] = useState(() => createForm(business, editing));
   const [onlyAvailable, setOnlyAvailable] = useState(false);
-  const resource = business.resources.find((item) => item.id === resourceId);
-  const roomType = isHotel
-    ? resource.roomTypes.find((item) => item.id === roomTypeId)
-    : null;
-  const relevant =
-    index.get(bookingKey(business.id, resourceId, isHotel ? "*" : date)) ||
-    EMPTY;
-  const hotelBookings = useMemo(
-    () =>
-      isHotel
-        ? business.resources.flatMap(
-            (item) => index.get(bookingKey(business.id, item.id, "*")) || EMPTY,
-          )
-        : EMPTY,
-    [isHotel, business, index],
+  const {
+    resourceId,
+    roomTypeId,
+    date,
+    endDate,
+    duration,
+    quantity,
+    selected,
+  } = form;
+
+  // Преизчисляваме само когато формата, резервациите или отделът се променят.
+  const options = useMemo(
+    () => getAvailability(business, form, index, editing),
+    [business, form, index, editing],
   );
-  const occupancy = useMemo(
-    () => (isHotel ? [] : buildOccupancy(relevant, business.step, editing?.id)),
-    [relevant, business.step, editing?.id, isHotel],
-  );
-  const slots = useMemo(
-    () =>
-      isHotel
-        ? []
-        : getSlots(business, resource, date, duration, quantity, occupancy),
-    [business, resource, date, duration, quantity, occupancy, isHotel],
-  );
-  const remaining = useMemo(
-    () =>
-      isHotel
-        ? hotelAvailability(
-            resource,
-            date,
-            endDate,
-            relevant,
-            editing?.id,
-            roomTypeId,
-          )
-        : 0,
-    [isHotel, resource, date, endDate, relevant, editing?.id, roomTypeId],
-  );
-  const nights = nightCount(date, endDate);
-  const validQuantity =
-    Number.isInteger(quantity) &&
-    quantity >= 1 &&
-    quantity <= (isHotel ? roomType?.capacity || 0 : resource.capacity);
-  const available =
-    validQuantity &&
-    (isHotel
-      ? nights >= 1 && nights <= 30 && remaining >= quantity
-      : slots.some((slot) => slot.start === selected && slot.available));
-  const hours = isHotel ? [] : getHours(business, date);
-  const suggestionAnchor =
-    selected ?? slots.find((slot) => !slot.available)?.start ?? null;
-  const needsTimeSuggestions =
-    !isHotel &&
-    !slots.some((slot) => slot.start === selected && slot.available) &&
-    (slots.length === 0 || slots.some((slot) => !slot.available));
-  const timeSuggestions = useMemo(
-    () =>
-      needsTimeSuggestions
-        ? suggestTimeAlternatives({
-            business,
-            resource,
-            date,
-            duration,
-            quantity,
-            index,
-            selected: suggestionAnchor,
-            ignoredId: editing?.id,
-          })
-        : EMPTY,
-    [
-      needsTimeSuggestions,
-      business,
-      resource,
-      date,
-      duration,
-      quantity,
-      index,
-      selected,
-      suggestionAnchor,
-      editing?.id,
-    ],
-  );
-  const hotelSuggestions = useMemo(
-    () =>
-      isHotel && nights >= 1 && nights <= 30 && remaining < quantity
-        ? suggestHotelAlternatives({
-            business,
-            resourceId,
-            roomTypeId,
-            date,
-            endDate,
-            quantity,
-            bookings: hotelBookings,
-            ignoredId: editing?.id,
-          })
-        : EMPTY,
-    [
-      isHotel,
-      nights,
-      remaining,
-      quantity,
-      business,
-      resourceId,
-      roomTypeId,
-      date,
-      endDate,
-      hotelBookings,
-      editing?.id,
-    ],
-  );
+  const {
+    resource,
+    roomType,
+    roomTypes,
+    slots,
+    hours,
+    remaining,
+    nights,
+    validPeriod,
+    available,
+    suggestions,
+  } = options;
+
+  function updateForm(changes) {
+    setForm((current) => ({ ...current, ...changes }));
+  }
+  // Стабилната функция позволява на SlotGrid да пропуска излишни рендери.
+  const selectTime = useCallback((selected) => {
+    setForm((current) => ({ ...current, selected }));
+  }, []);
 
   function save() {
-    const common = {
+    const booking = {
       id: editing?.id || createBookingId(),
       businessId: business.id,
       resourceId,
       date,
       quantity,
     };
-    onSave(
-      isHotel
-        ? { ...common, endDate, roomType: roomTypeId }
-        : { ...common, start: selected, end: selected + duration },
-    );
+    if (isHotel) {
+      booking.endDate = endDate;
+      if (roomTypeId) booking.roomType = roomTypeId;
+    } else {
+      booking.start = selected;
+      booking.end = selected + duration;
+    }
+    onSave(booking);
   }
-  function applyTimeSuggestion(suggestion) {
-    setDate(suggestion.date);
-    setSelected(suggestion.start);
-  }
-  function applyHotelSuggestion(suggestion) {
-    setResourceId(suggestion.resourceId);
-    setRoomTypeId(suggestion.roomTypeId);
-    setDate(suggestion.date);
-    setEndDate(suggestion.endDate);
+
+  function applySuggestion(suggestion) {
+    if (isHotel) {
+      updateForm({
+        resourceId: suggestion.resourceId,
+        roomTypeId: suggestion.roomTypeId,
+        date: suggestion.date,
+        endDate: suggestion.endDate,
+      });
+    } else {
+      updateForm({ date: suggestion.date, selected: suggestion.start });
+    }
   }
   return (
     <div id="booking-area">
@@ -202,10 +102,12 @@ export default function ReservationEditor({
                 aria-pressed={item.id === resourceId}
                 className={`resource-card ${item.id === resourceId ? "chosen" : ""}`}
                 onClick={() => {
-                  setResourceId(item.id);
-                  if (isHotel) setRoomTypeId(item.roomTypes[0].id);
-                  setSelected(null);
-                  setQuantity(1);
+                  updateForm({
+                    resourceId: item.id,
+                    roomTypeId: item.roomTypes?.[0]?.id || "",
+                    selected: null,
+                    quantity: 1,
+                  });
                 }}
               >
                 <span className="selection-dot" aria-hidden="true" />
@@ -225,8 +127,7 @@ export default function ReservationEditor({
                 value={date}
                 required
                 onChange={(event) => {
-                  setDate(event.target.value);
-                  setSelected(null);
+                  updateForm({ date: event.target.value, selected: null });
                 }}
               />
             </label>
@@ -239,7 +140,9 @@ export default function ReservationEditor({
                   min={addDays(date, 1)}
                   max={addDays(date, 30)}
                   required
-                  onChange={(event) => setEndDate(event.target.value)}
+                  onChange={(event) =>
+                    updateForm({ endDate: event.target.value })
+                  }
                 />
               </label>
             ) : (
@@ -248,8 +151,10 @@ export default function ReservationEditor({
                 <select
                   value={duration}
                   onChange={(event) => {
-                    setDuration(Number(event.target.value));
-                    setSelected(null);
+                    updateForm({
+                      duration: Number(event.target.value),
+                      selected: null,
+                    });
                   }}
                 >
                   {business.durations.map((value) => (
@@ -267,11 +172,13 @@ export default function ReservationEditor({
                   <select
                     value={roomTypeId}
                     onChange={(event) => {
-                      setRoomTypeId(event.target.value);
-                      setQuantity(1);
+                      updateForm({
+                        roomTypeId: event.target.value,
+                        quantity: 1,
+                      });
                     }}
                   >
-                    {resource.roomTypes.map((item) => (
+                    {roomTypes.map((item) => (
                       <option key={item.id} value={item.id}>
                         {item.name} ({item.capacity} общо)
                       </option>
@@ -286,7 +193,7 @@ export default function ReservationEditor({
                     max={roomType?.capacity}
                     value={quantity}
                     onChange={(event) =>
-                      setQuantity(Number(event.target.value))
+                      updateForm({ quantity: Number(event.target.value) })
                     }
                   />
                 </label>
@@ -295,21 +202,22 @@ export default function ReservationEditor({
           </div>
           {isHotel ? (
             <div className="hotel-availability">
-              <strong>{nights >= 1 && nights <= 30 ? remaining : "—"}</strong>
-              <span>свободни стаи от този вид за целия престой</span>
+              <strong>{validPeriod ? remaining : "—"}</strong>
+              <span>
+                {roomTypeId
+                  ? "свободни стаи от този вид за целия престой"
+                  : "свободни стаи общо за целия престой"}
+              </span>
               <p className="muted">
-                {nights >= 1 && nights <= 30
+                {validPeriod
                   ? `${nights} нощувки · Напускане до 11:00, настаняване след 14:00.`
                   : "Изберете период от 1 до 30 нощувки."}
               </p>
-              {validQuantity &&
-                nights >= 1 &&
-                nights <= 30 &&
-                remaining < quantity && (
-                  <p className="notice warning">
-                    Няма достатъчно стаи от този вид за избрания период.
-                  </p>
-                )}
+              {validPeriod && remaining < quantity && (
+                <p className="notice warning">
+                  Няма достатъчно стаи от този вид за избрания период.
+                </p>
+              )}
             </div>
           ) : (
             <>
@@ -336,7 +244,7 @@ export default function ReservationEditor({
               <SlotGrid
                 slots={slots}
                 selected={selected}
-                onSelect={setSelected}
+                onSelect={selectTime}
                 onlyAvailable={onlyAvailable}
               />
               <p className="small muted">
@@ -345,49 +253,38 @@ export default function ReservationEditor({
               </p>
             </>
           )}
-          {hotelSuggestions.length > 0 && (
-            <section className="suggestions" aria-label="Алтернативни престои">
-              <h3>Предложени варианти</h3>
-              <p>Пробвайте друг тип стая, хотел или близка дата.</p>
+          {suggestions.length > 0 && (
+            <section
+              className="suggestions"
+              aria-label={
+                isHotel ? "Алтернативни престои" : "Предложени часове"
+              }
+            >
+              <h3>
+                {isHotel ? "Предложени варианти" : "Следващи свободни часове"}
+              </h3>
+              <p>
+                {isHotel
+                  ? "Пробвайте друг тип стая, хотел или близка дата."
+                  : "Изберете удобна алтернатива за този специалист."}
+              </p>
               <div className="suggestion-list">
-                {hotelSuggestions.map((suggestion) => (
+                {suggestions.map((suggestion, position) => (
                   <button
                     className="suggestion-option"
-                    key={`${suggestion.resourceId}:${suggestion.roomTypeId}:${suggestion.date}`}
+                    key={position}
                     type="button"
-                    onClick={() => applyHotelSuggestion(suggestion)}
+                    onClick={() => applySuggestion(suggestion)}
                   >
                     <strong>
-                      {suggestion.resourceName} · {suggestion.roomTypeName}
+                      {isHotel
+                        ? `${suggestion.resourceName} · ${suggestion.roomTypeName}`
+                        : `${displayDate(suggestion.date)} · ${formatTime(suggestion.start)}`}
                     </strong>
                     <small>
-                      {displayDate(suggestion.date)} –{" "}
-                      {displayDate(suggestion.endDate)} · {suggestion.remaining}{" "}
-                      свободни
-                    </small>
-                  </button>
-                ))}
-              </div>
-            </section>
-          )}
-          {timeSuggestions.length > 0 && (
-            <section className="suggestions" aria-label="Предложени часове">
-              <h3>Следващи свободни часове</h3>
-              <p>Изберете удобна алтернатива за този специалист.</p>
-              <div className="suggestion-list">
-                {timeSuggestions.map((suggestion) => (
-                  <button
-                    className="suggestion-option"
-                    key={`${suggestion.date}:${suggestion.start}`}
-                    type="button"
-                    onClick={() => applyTimeSuggestion(suggestion)}
-                  >
-                    <strong>
-                      {displayDate(suggestion.date)} ·{" "}
-                      {formatTime(suggestion.start)}
-                    </strong>
-                    <small>
-                      {resource.name} · {duration} минути
+                      {isHotel
+                        ? `${displayDate(suggestion.date)} – ${displayDate(suggestion.endDate)} · ${suggestion.remaining} свободни`
+                        : `${resource.name} · ${duration} минути`}
                     </small>
                   </button>
                 ))}
