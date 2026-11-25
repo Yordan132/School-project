@@ -16,7 +16,7 @@
   },
   "devDependencies": {
     "@playwright/test": "^1.65.1",
-    "vite": "^6.2.7"
+    "vite": "^6.4.6"
   },
   "engines": {
     "node": ">=22.12.0"

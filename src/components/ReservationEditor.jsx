@@ -23,6 +23,7 @@ export default function ReservationEditor({
   profile,
   index,
   editing,
+  storageBlocked,
   onSave,
   onCancel,
 }) {
@@ -406,7 +407,7 @@ export default function ReservationEditor({
             endDate={endDate}
             isHotel={isHotel}
             customer={editing?.customer || profile.name}
-            available={available}
+            available={available && !storageBlocked}
             onSave={save}
             onCancel={onCancel}
           />

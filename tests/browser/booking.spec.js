@@ -1,5 +1,10 @@
 import { test, expect } from "@playwright/test";
 
+// Демо записите са за текущия ден. Фиксираме го, за да не зависят тестовете от календара.
+test.beforeEach(async ({ page }) => {
+  await page.clock.setFixedTime(new Date("2026-11-16T12:00:00Z"));
+});
+
 test("customers own their appointments; admin sees everyone and filters reservations", async ({
   page,
 }) => {

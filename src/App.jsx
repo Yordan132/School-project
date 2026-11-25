@@ -31,6 +31,9 @@ export default function App() {
   const [initial] = useState(loadBookings);
   const [bookings, setBookings] = useState(initial.bookings);
   const [warning, setWarning] = useState(initial.warning);
+  const [storageBlocked, setStorageBlocked] = useState(
+    Boolean(initial.storageBlocked),
+  );
   const [profileId, setProfileId] = useState(initialProfile);
   const [businessId, setBusinessId] = useState(businesses[0].id);
   const [editing, setEditing] = useState(null);
@@ -50,9 +53,11 @@ export default function App() {
   );
 
   useEffect(() => {
+    // При грешка в зареждането пазим оригинала, докато потребителят избере reset.
+    if (storageBlocked) return;
     const error = saveBookings(bookings);
     if (error) setWarning(error);
-  }, [bookings]);
+  }, [bookings, storageBlocked]);
   useEffect(() => {
     try {
       localStorage.setItem("myasto-profile", profileId);
@@ -76,6 +81,7 @@ export default function App() {
     setMessage("");
   }
   function save(draft) {
+    if (storageBlocked) return;
     // Проверката използва всички резервации, включително невидимите чужди часове.
     const result = saveReservation(bookings, draft, business, profile);
     if (result.error) {
@@ -100,6 +106,7 @@ export default function App() {
     window.scrollTo({ top: 0, behavior: "smooth" });
   }
   function remove(id) {
+    if (storageBlocked) return;
     const result = cancelReservation(bookings, id, profile);
     if (result.error) {
       setMessage(result.error);
@@ -118,6 +125,8 @@ export default function App() {
       )
     )
       return;
+    setStorageBlocked(false);
+    setWarning("");
     setBookings(createDemoBookings());
     clearEditor();
     setMessage("Примерните данни са възстановени.");
@@ -220,6 +229,7 @@ export default function App() {
               profile={profile}
               index={index}
               editing={editing}
+              storageBlocked={storageBlocked}
               onSave={save}
               onCancel={clearEditor}
             />
